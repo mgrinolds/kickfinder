@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="">
+
+    <title>kickfinder</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="static/assets/css/bootstrap.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="static/assets/css/main.css" rel="stylesheet">
+
+    <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Raleway:400,300,700' rel='stylesheet' type='text/css'>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+
+    <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+    <script src="http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+
+    <link href="static/typeahead.js-bootstrap.css" rel="stylesheet">
+    <script src="static/typeahead.min.js"></script>
+
+    <script src="static/jquery.isotope.js" type="text/javascript"></script> 
+    
+
+     <script src="/static/bootstrap-slider.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/slider.css">
+
+    <script type=text/javascript>
+      $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+    </script>
+
+
+
+  </head>
+
+  <body data-spy="scroll" data-offset="0" data-target="#navigation">
+
+    <!-- Fixed navbar -->
+        <div id="navigation" class="navbar navbar-default navbar-fixed-top">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="#"><b>kickfinder</b></a>
+            </div>
+            <div class="navbar-collapse collapse">
+              <ul class="nav navbar-nav">
+                <li class="active"><a href="#home" class="smothscroll">Home</a></li>
+                <li><a href="#desc" class="smothscroll">Description</a></li>
+                <li><a href="#showcase" class="smothScroll">Showcase</a></li>
+                <li><a href="#contact" class="smothScroll">Contact</a></li>
+              </ul>
+            </div><!--/.nav-collapse -->
+          </div>
+        </div>
+
+    <section id="home" name="home"></section>
+    <div id="headerwrap">
+        <div class="container">
+            <div class="row centered">
+                <div class="col-lg-12">
+                    <h1>kick<b>finder</b></h1>
+                    <h3>personalized kickstarter recommendations</h3>
+                    <br>
+                </div>
+
+                <div class="col-lg-1"></div>
+
+                <div class="col-lg-5">
+
+
+
+  </section> <!-- #options -->
+  
+
+
+                    <h5>link to a project you like or your profile:</h5>
+                    <form role="form" action="." method="POST">
+                  <div class="form-group">
+
+                    <input type="text" name="input-name" id="projects" class="form-control" 
+                        value="{{  input_string }}" placeholder="project or profile" width="300">
+
+                    
+                  </div>
+                  <button type="submit" class="btn btn-large btn-success" id="submit">SUBMIT</button>
+                </form>
+
+                    <div class="wrapper">
+
+                    <br>
+                    <h5>desired project size (number of backers):</h5>
+                    <input class="slider slider-horizontal" id="slidernorm" data-slider-tooltip="hide" value=5 data-slider-value=5>
+                    <h5>desired project success (probability):</h5>
+                    <input class="slider slider-horizontal" id="sliderprob" data-slider-tooltip="hide" value=5 data-slider-value=5>
+                    <br>
+                    <br>
+
+                    </div>
+
+
+                        {% if self_info %}
+
+                        {% for result in self_info%}
+
+
+                        <div class="btn btn-large btn-success"
+                            onclick="window.open('{{  result['url']  }}','mywindow');" style="cursor: hand;">
+                            <h4 class="name" font-size="20 px">{{ result['name'] }}</h4>
+                            <p class="description">{{ result['description'] }}</p>
+                            <img src="{{ result['image_url'] }}" width="300">
+                            <p class="prediction" style="display:none">{{  result['prediction']  }}</p>
+                            {% if result['prediction'] %}                         
+                            <h5 class="prediction_disp">
+                                {{  result['prediction']  }}% chance of success
+                            </h5>
+                            {% endif %}
+                        </div>
+
+
+                        {% endfor %}
+
+                        {% endif %}
+
+                </div>
+
+
+                <div class="col-lg-5">
+
+                    {% if results %}
+                    <div id="mycontainer" class="projectcontainer">
+                    {% for result in results%}
+      
+                         <div class="item btn btn-large btn-success results project"
+                                onclick="window.open('{{  result['url']  }}','mywindow');" style="cursor: hand;">
+                            <h4 class="name">{{  result['name']  }}</h2> 
+                            
+                            <img src="{{ result['image_url'] }}" width="200">
+                            <p class="description">{{ result['description'] }}</p> 
+                            <h5 class="prediction_disp">
+                                {{  result['nbackers']  }} current backers
+                            </h5>
+
+                            <h5 class="prediction_disp">
+                                {{  result['prediction']  }}% chance of success
+                            </h5>
+
+                                
+                            <p class="nconnections" style="display:none">{{  result['count']  }}</p>
+                            <p class="nbackers" style="display:none">{{ result['nbackers'] }}</p>
+                            <p class="normconn" style="display:none">{{  result['count']  }}</p>
+                            <p class="prediction" style="display:none">{{  result['prediction']  }}</p>
+                            
+                        </div>  
+
+                        <br>
+
+
+
+                    {% endfor %}
+                    </div>
+                    {% endif %}
+
+                </div>
+
+                <div class="col-lg-1"></div>
+            </div>
+        </div> <!--/ .container -->
+    </div><!--/ #head
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script>
+        $('#projects').typeahead({
+          name: 'projects',
+          //prefetch: '/q?projects=B',
+          remote: '/json/projects?q=%QUERY',
+          limit: 10
+        });
+    </script>
+
+
+
+
+
+<script>
+
+    function sortfunction() {
+    
+        var $container = $('#mycontainer');
+      
+      $container.isotope({
+        itemSelector : '.item',
+        sortAscending : false,
+        getSortData : {
+          nconnections : function( $elem ) {
+            return parseInt( $elem.find('.nconnections').text(), 10 );
+          },
+          nbackers : function( $elem ) {
+            return parseFloat( $elem.find('.nbackers').text().replace( /[\(\)]/g, '') 
+);
+          },
+          name : function ( $elem ) {
+            return $elem.find('.name').text();
+          },
+          normconn : function( $elem ) {
+            return parseFloat( $elem.find('.normconn').text().replace( /[\(\)]/g, '') 
+);
+          }
+        },
+       sortBy : 'normconn'
+      });
+
+      $container.isotope( 'reloadItems' )
+      $container.isotope('reLayout');
+
+
+        }
+
+</script>
+
+
+<script>
+    $(function(){
+      
+      sortfunction();
+      
+      var $container = $('#mycontainer');
+        $container.isotope( 'reloadItems' )
+        $container.isotope('reLayout');
+
+    });
+  </script>
+
+<script>
+    function normfunction()
+    {
+        var results = document.getElementsByClassName("results");
+        
+        for (var i = results.length - 1; i >= 0; i--)
+        {
+          nbackers = results[i].getElementsByClassName("nbackers")[0].innerHTML
+          nconnections = results[i].getElementsByClassName("nconnections")[0].innerHTML
+          prediction = results[i].getElementsByClassName("prediction")[0].innerHTML 
+
+          slider_exp = 0.5 - $('#slidernorm').val()/10
+    
+          prob_adj = -Math.log(0.1 + Math.abs(prediction/100 - $('#sliderprob').val()/10))
+
+          results[i].getElementsByClassName("normconn")[0].innerHTML 
+                = nconnections/Math.pow(nbackers,slider_exp)*prob_adj
+
+          sortfunction()
+
+        }
+    }
+</script>
+
+<script>
+  $(function() {
+    $( "#slider" ).slider({
+  orientation: "horizontal",
+  range: "min",
+  min: 0,
+  max: 10,
+  value: 5,
+  slide: function( event, ui) { normfunction() }
+    })
+})
+
+</script>
+
+<script>
+
+   
+
+</script>
+
+
+<script>
+    function recompute() {
+    alert($('#slidernorm').val())
+    }
+
+     $('#slidernorm').slider().on('slideStop', function(){
+		normfunction();
+          sortfunction();
+	})
+
+    $('#sliderprob').slider().on('slideStop', function(){
+		normfunction();
+          sortfunction();
+	})
+
+</script>
+
+
+
+
+  </body>
+</html>
