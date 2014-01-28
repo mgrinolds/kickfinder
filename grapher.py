@@ -25,7 +25,7 @@ class NetworkGraph:
         self._load_graph()
         
         
-    def find_from_project(self,project_id,nentries):
+    def find_project_from_project(self,project_id,nentries):
         if not self.G.has_node(project_id):
             return None        
         
@@ -40,16 +40,37 @@ class NetworkGraph:
         nn_top_occur = nn_count.most_common(nentries)  
 
         return nn_top_occur
+        
+    def find_profile_from_profile(self,profile_id,nentries):
+        if not self.G.has_node(profile_id):
+            return None
+        
+        neighbors = self.G.neighbors(profile_id)
+        next_neighbors_2d = [self.G.neighbors(neighbor) for neighbor in neighbors]
+        next_neighbors = [item for sublist in next_neighbors_2d for item in sublist]
+        
+        nn_count = Counter(next_neighbors)
+        nn_count.pop(profile_id)
+        nn_top_occur = nn_count.most_common(nentries)  
 
-    def find_from_profile(self,profile_id,nentries):    
+        return nn_top_occur
+
+    def find_project_from_profile(self,profile_id,nentries,test_ids=None):    
         if not self.G.has_node(profile_id):
             return None
         
         neighbors = self.G.neighbors(profile_id)
         next_neighbors_2d = [self.G.neighbors(neighbor) for neighbor in neighbors]    
         next_neighbors = [item for sublist in next_neighbors_2d for item in sublist]    
+
+        if not neighbors:
+            return None
         
-        next_neighbors.remove(profile_id)    
+        if test_ids:
+            assert(len(set(test_ids) & set(neighbors)) == 0)    
+            
+        
+        next_neighbors.remove(profile_id)
 
         nn_thresh = 5000
         next_neighbors = next_neighbors[:nn_thresh]
@@ -66,10 +87,8 @@ class NetworkGraph:
         counts = np.array([count for link, count in common_tuple if count > 50],dtype='float')
         graph_links = [link for link, count in common_tuple if count > 50]
 
-#        return graph_links
-
-#        db_info = self.project_sql.extract_all_manycols('name, nbackers',\
-#            'url',graph_links,"AND nbackers > 0")  
+        if not graph_links:
+            return None
 
         db_info = self.project_sql.extract_all_manycols('idprojects, nbackers',\
             'idprojects',graph_links,added_clause="AND nbackers > 0") 
@@ -78,7 +97,7 @@ class NetworkGraph:
             
         for ind,graph_link in enumerate(graph_links):
             if graph_link in db_links:
-                counts[ind] = counts[ind] / sizes[db_links.index(graph_link)]
+                counts[ind] = counts[ind] / pow(sizes[db_links.index(graph_link)],1.0)
             else:
                 counts[ind] = 0
     
@@ -89,6 +108,30 @@ class NetworkGraph:
         
         return zip(top_projects, top_counts)  
         
+    def find_profile_from_project(self,project_id,nentries):    
+        if not self.G.has_node(project_id):
+            return None
+        
+        neighbors = self.G.neighbors(project_id)
+        next_neighbors_2d = [self.G.neighbors(neighbor) for neighbor in neighbors]    
+        next_neighbors = [item for sublist in next_neighbors_2d for item in sublist]    
+        
+        next_neighbors.remove(project_id)    
+
+        nn_thresh = 5000
+        next_neighbors = next_neighbors[:nn_thresh]
+        
+        next_next_neighbors_2d = [self.G.neighbors(next_neighbor) for next_neighbor in next_neighbors]    
+        next_next_neighbors = [item for sublist in next_next_neighbors_2d for item in sublist]
+            
+        nnn_count = Counter(next_next_neighbors)
+    
+        [nnn_count.pop(neighbor_link) for neighbor_link in neighbors]
+    
+        nnn_top_occur = nnn_count.most_common(nentries)      
+    
+        return nnn_top_occur    
+
     def _load_graph(self):
         
 #        db_extract = self.backer_sql.extract_all_manycols(\
@@ -128,12 +171,12 @@ if __name__ == '__main__':
     dc = dbc.DBconverter()
     proj_id = dc.proj_id_from_link(['/projects/elitecards/one-million-bicycle-playing-cards-deck'])
 
-    preds = ng.find_from_project(proj_id,10)
+    preds = ng.find_project_from_project(proj_id,10)
     for pred, count in preds:
         print (pred,count)
         print (dc.proj_name_from_id(pred),count)
      
     backer_id = dc.backer_id_from_link(['/profile/1044791950']) 
-    preds = ng.find_from_profile(backer_id,10)
+    preds = ng.find_project_from_profile(backer_id,10)
     for pred, count in preds:
         print (dc.proj_name_from_id(pred),count)

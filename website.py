@@ -44,7 +44,7 @@ def search():
                                 prediction = '%.0f' % (own_info[0][5]*100)\
                                     ))
                                     
-        results = network_graph.find_from_project(id_from_project,kfs.num_web_display)
+        results = network_graph.find_project_from_project(id_from_project,kfs.num_web_display)
             
     elif id_from_backer:
         
@@ -61,7 +61,7 @@ def search():
                                 count=0\
                                     ))
         
-        results = network_graph.find_from_profile(id_from_backer,kfs.num_web_display)   
+        results = network_graph.find_project_from_profile(id_from_backer,kfs.num_web_display)   
     else:
         return 'database error'    
 
