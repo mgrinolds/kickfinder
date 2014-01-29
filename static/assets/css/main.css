@@ -73,31 +73,31 @@ a:after {
    ========================================================================== */
 
 #headerwrap {
-	background-color: #34495e;
+	/*background-color: #34495e;
 	padding-top: 60px;
 }
 
 #headerwrap h1 {
 	margin-top: 0px;
-	color: white;
+	color: black;
 	font-size: 70px;
 	
 }
 
 #headerwrap h3 {
-	color: white;
+	color: black;
 	font-size: 30px;
 }
 
 #headerwrap h5 {
-	color: white;
+	color: black;
 	font-weight: 700;
 	text-align: left;
 }
 
 #headerwrap p {
 	text-align: left;
-	color: white
+	color: black
 }
 
 /* intro Wrap */
@@ -130,7 +130,8 @@ a:after {
 }
 
 #footerwrap {
-	background-color: #2f2f2f;
+	/*background-color: #2f2f2f;*/
+    background-color = white;
 	color: white;
 	padding-top: 40px;
 	padding-bottom: 60px;

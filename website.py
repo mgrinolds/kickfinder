@@ -8,7 +8,7 @@ from flask import Flask, render_template, request, json
 
 from operator import itemgetter
 
-import kickfinder_settings as kfsddd
+import kickfinder_settings as kfs
 import dbconverter as dbc
 import grapher as graph
 
@@ -19,7 +19,7 @@ app = Flask(__name__)
 
 
 @app.route("/")
-def index():dd
+def index():
     return render_template('index.html')
    
 @app.route('/', methods=['POST'])

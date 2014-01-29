@@ -1,0 +1,55 @@
+.project_new {
+    border:2px solid;
+    border-radius:25px;
+    background-color: white;
+    background-position: center center;
+    background-repeat: no-repeat;
+    box-shadow: 3px 3px 1px #888888;
+    position: relative;
+    background: no-repeat, #FFFFFF;
+    height: 450px;
+    width: 300px;
+}
+
+.hover_wrapper {
+    display: none;
+    background-color: #FFFFFF;
+}
+
+.project_new:hover .hover_wrapper {
+    display: block;
+}
+
+
+.project_url1 {
+  position: absolute;
+  left:26%;
+  bottom: 15px;
+  color: #149bdf;
+  font-size: 18px
+}
+
+.project_url2 {
+  position: absolute;
+  left:25%;
+  bottom: 35px;
+  color: #149bdf;
+  font-size: 18px
+}
+
+.textonimage {
+  background-color:rgba(255,255,255,1);
+}
+
+.project_title {
+  font-weight: bold
+  font-size: 40px;
+  border-radius:5px;
+}
+
+div.centre
+{
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}

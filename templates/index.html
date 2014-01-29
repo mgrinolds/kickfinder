@@ -15,6 +15,8 @@
     <!-- Custom styles for this template -->
     <link href="static/assets/css/main.css" rel="stylesheet">
 
+    <link href="static/custom.css" rel="stylesheet">
+
     <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Raleway:400,300,700' rel='stylesheet' type='text/css'>
 
@@ -115,18 +117,42 @@
 
                         {% for result in self_info%}
 
+    
+                        <div class="project_new searched_for centre"
+                                style="background-image: url({{ result['image_url'] }}); 
+                                        background-repeat: no-repeat                                                                              
+                                        width: 500px; 
+                                        border: 1px solid black;
+                                        opacity: 1">
 
-                        <div class="btn btn-large btn-success"
-                            onclick="window.open('{{  result['url']  }}','mywindow');" style="cursor: hand;">
-                            <h4 class="name" font-size="20 px">{{ result['name'] }}</h4>
-                            <p class="description">{{ result['description'] }}</p>
-                            <img src="{{ result['image_url'] }}" width="300">
-                            <p class="prediction" style="display:none">{{  result['prediction']  }}</p>
-                            {% if result['prediction'] %}                         
-                            <h5 class="prediction_disp">
-                                {{  result['prediction']  }}% chance of success
-                            </h5>
-                            {% endif %}
+                            <div class="project_new" style="position: absolute; top: 0px; left: 0px;"/>
+    
+                                <h4 class="name textonimage project_title">
+                                    {{  result['name']  }}
+                                </h4> 
+
+                                <img src="{{ result['image_url'] }}" height="100">
+                                
+                                <p class="description">{{ result['description'] }}</p> 
+                                <h5 class="prediction_disp">
+                                    {{  result['nbackers']  }} current backers
+                                </h5>
+    
+                                <h5 class="prediction_disp">
+                                    {{  result['prediction']  }}% chance of success
+                                </h5>
+    
+                                <a href="{{ result['url'] }}" class="project_url2">
+                                    kickstarter campaign <br>
+                                </a>
+                                
+    
+                                <a href="{{ result['url'] }}" class="project_url1"
+                                    style>
+                                    project's homepage <br>
+                                </a>
+
+                            </div>
                         </div>
 
 
@@ -139,24 +165,52 @@
 
                 <div class="col-lg-5">
 
+
+
                     {% if results %}
                     <div id="mycontainer" class="projectcontainer">
                     {% for result in results%}
-      
-                         <div class="item btn btn-large btn-success results project"
-                                onclick="window.open('{{  result['url']  }}','mywindow');" style="cursor: hand;">
-                            <h4 class="name">{{  result['name']  }}</h2> 
+   
+
+                         <div class="item results project project_new" 
+                                style="background-image: url({{ result['image_url'] }}); 
+                                        background-repeat: no-repeat 
+                                        background-attachment:fixed;
+                                        background-position:center;                                                                             
+                                        width: 300px; 
+                                        opacity: 1;
+                                        border: 2px solid black;">
                             
-                            <img src="{{ result['image_url'] }}" width="200">
-                            <p class="description">{{ result['description'] }}</p> 
-                            <h5 class="prediction_disp">
-                                {{  result['nbackers']  }} current backers
-                            </h5>
+               
 
-                            <h5 class="prediction_disp">
-                                {{  result['prediction']  }}% chance of success
-                            </h5>
+                            <div class="hover_wrapper project_new" style="position: absolute; top: 0px; left: 0px;"/>
+    
+                                <h4 class="name textonimage project_title">
+                                    {{  result['name']  }}
+                                </h4> 
 
+                                <img src="{{ result['image_url'] }}" height="100">
+                                
+                                <p class="description">{{ result['description'] }}</p> 
+                                <h5 class="prediction_disp">
+                                    {{  result['nbackers']  }} current backers
+                                </h5>
+    
+                                <h5 class="prediction_disp">
+                                    {{  result['prediction']  }}% chance of success
+                                </h5>
+    
+                                <a href="{{ result['url'] }}" class="project_url2">
+                                    kickstarter campaign <br>
+                                </a>
+                                
+    
+                                <a href="{{ result['url'] }}" class="project_url1"
+                                    style>
+                                    project's homepage <br>
+                                </a>
+
+                            </div>
                                 
                             <p class="nconnections" style="display:none">{{  result['count']  }}</p>
                             <p class="nbackers" style="display:none">{{ result['nbackers'] }}</p>
