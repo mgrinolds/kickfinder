@@ -15,7 +15,7 @@ connection = mdb.connect('localhost', 'mgrinolds', gp.get_pw(), database_name)
 session = requests.Session()
 sleep_time = 2.5 #max random time between scrapes
 base_url = 'http://www.kickstarter.com'
-backer_backed_thresh = 25
+backer_backed_thresh = 10
 num_web_display = 20
 
 backer_graph_tbl = SqlTable(connection,'backers_nohtml')

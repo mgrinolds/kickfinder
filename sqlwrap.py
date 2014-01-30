@@ -107,22 +107,20 @@ class SqlTable:
         
         return self._write(sql_str,pass_tuple)
          
-    def extract_single(self,ret_col_name,test_col_name,test_col_val):
+    def extract_single(self,ret_col_name,test_col_name,test_col_val,added_clause=None):
+        sql_str = "SELECT %s FROM %s WHERE %s"\
+            % (ret_col_name, self.table_name,test_col_name)
+        sql_str += " = %s " 
         
-        if type(test_col_val) is str:
-            sql_str = "SELECT %s FROM %s WHERE %s = '%s'"
-        elif (type(test_col_val) is int) or (type(test_col_val) is long):      
-            sql_str = "SELECT %s FROM %s WHERE %s = %d"
-        else:
-            sql_str = "SELECT %s FROM %s WHERE %s = '%s'"
-            
-        pass_tuple = (ret_col_name, self.table_name,test_col_name,test_col_val)
-        result = self._queryOneTuple(sql_str % pass_tuple)        
+        if added_clause:
+            sql_str += added_clause
+
+        pass_tuple = (test_col_val,)
+        result = self._queryOneTuple(sql_str,pass_tuple)        
         if result:
             result = result[0]
         return result            
             
-         
     def extract_row(self,col_name,row_value,condition_str=None):
         sql_str = "SELECT * FROM %s WHERE %s = '%s'"  % (self.table_name,col_name,row_value)  
         if condition_str: sql_str = sql_str + condition_str
@@ -161,10 +159,9 @@ class SqlTable:
         if added_clause:
             sql_str += added_clause
         
-        return self._queryAllTuple(sql_str)   
+#        return self._queryAllTuple(sql_str)   
+        return self._queryAllDict(sql_str)
      
-    
-    
     def extract_all_manycols(self,ret_col_names,sel_col_name=None,sel_col_values=None,added_clause = None):    
         if (type(sel_col_values) is list) or (type(sel_col_values) is tuple):
             str_values = str(sel_col_values)[1:-1]
@@ -248,8 +245,19 @@ class SqlTable:
             COLUMN = 0
             column=[elem[COLUMN] for elem in data]
             return column
+            
+    def _queryAllDict(self,sql_str,pass_tuple=None):
+        with self.con:
+            self.cur = self.con.cursor(mdb.cursors.DictCursor)
+            if pass_tuple:
+                self.cur.execute(sql_str,pass_tuple)
+                return self.cur.fetchall()
+            else:
+                self.cur.execute(sql_str)
+                return self.cur.fetchall()  
 
 if __name__ == '__main__':
     con = mdb.connect('localhost', 'mgrinolds', gp.get_pw(), 'kickstarter')    
     proj_table = SqlTable(con,'projects_nohtml')
     
+    print proj_table.extract_single('name','idprojects',121)

@@ -88,7 +88,7 @@
   
 
 
-                    <h5>link to a project you like or your profile:</h5>
+                    <h5>project name or a backer's name:</h5>
                     <form role="form" action="." method="POST">
                   <div class="form-group">
 
@@ -97,8 +97,14 @@
 
                     
                   </div>
-                  <button type="submit" class="btn btn-large btn-success" id="submit">SUBMIT</button>
-                </form>
+                  <div id="horizontalContainer" style="float: none" width="300 px">
+                        <button type="submit" class="btn btn-large btn-success" 
+                            id="submit">SUBMIT</button>
+                        <input type="checkbox" name="only_active" >only active projects</input>
+                        <input type="hidden" name="only_active" value="off" />
+                  </div>  
+                  
+                  </form>
 
                     <div class="wrapper">
 
@@ -142,12 +148,12 @@
                                     {{  result['prediction']  }}% chance of success
                                 </h5>
     
-                                <a href="{{ result['url'] }}" class="project_url2">
+                                <a href="{{ result['url'] }}" target=_blank class="project_url2">
                                     kickstarter campaign <br>
                                 </a>
                                 
     
-                                <a href="{{ result['url'] }}" class="project_url1"
+                                <a href="{{ result['url'] }}" target=_blank class="project_url1"
                                     style>
                                     project's homepage <br>
                                 </a>
@@ -181,7 +187,9 @@
                                         opacity: 1;
                                         border: 2px solid black;">
                             
-               
+                            <h4 class="name textonimage project_title">
+                                {{  result['name']  }}
+                            </h4>
 
                             <div class="hover_wrapper project_new" style="position: absolute; top: 0px; left: 0px;"/>
     
@@ -200,12 +208,12 @@
                                     {{  result['prediction']  }}% chance of success
                                 </h5>
     
-                                <a href="{{ result['url'] }}" class="project_url2">
+                                <a href="{{ result['url'] }}" target=_blank class="project_url2">
                                     kickstarter campaign <br>
                                 </a>
                                 
     
-                                <a href="{{ result['url'] }}" class="project_url1"
+                                <a href="{{ result['url'] }}" target=_blank class="project_url1"
                                     style>
                                     project's homepage <br>
                                 </a>
@@ -235,20 +243,17 @@
     </div><!--/ #head
 
 
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script>
-        $('#projects').typeahead({
-          name: 'projects',
-          //prefetch: '/q?projects=B',
-          remote: '/json/projects?q=%QUERY',
-          limit: 10
-        });
-    </script>
-
-
-
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script>
+    $('#projects').typeahead({
+      name: 'projects',
+      //prefetch: '/q?projects=B',
+      remote: '/json/projects?q=%QUERY',
+      limit: 10
+    });
+</script>
 
 
 <script>
@@ -284,9 +289,7 @@
 
 
         }
-
 </script>
-
 
 <script>
     $(function(){
@@ -325,30 +328,6 @@
 </script>
 
 <script>
-  $(function() {
-    $( "#slider" ).slider({
-  orientation: "horizontal",
-  range: "min",
-  min: 0,
-  max: 10,
-  value: 5,
-  slide: function( event, ui) { normfunction() }
-    })
-})
-
-</script>
-
-<script>
-
-   
-
-</script>
-
-
-<script>
-    function recompute() {
-    alert($('#slidernorm').val())
-    }
 
      $('#slidernorm').slider().on('slideStop', function(){
 		normfunction();
@@ -361,9 +340,6 @@
 	})
 
 </script>
-
-
-
 
   </body>
 </html>

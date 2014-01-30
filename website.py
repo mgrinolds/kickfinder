@@ -11,12 +11,14 @@ from operator import itemgetter
 import kickfinder_settings as kfs
 import dbconverter as dbc
 import grapher as graph
+import iohandler as ioh
 
 dc = dbc.DBconverter()
 network_graph = graph.NetworkGraph()
+input_handler = ioh.InputHandler()
+output_handler = ioh.OutputHandler()
 
 app = Flask(__name__)
-
 
 @app.route("/")
 def index():
@@ -25,63 +27,46 @@ def index():
 @app.route('/', methods=['POST'])
 def search():
     input_string =  request.form['input-name']   
+    only_active_flag = request.form['only_active']
+   
+    if not input_string:
+        return render_template('index.html')
     
-
-    id_from_project = dc.proj_id_from_unknown(input_string)
-    id_from_backer = dc.backer_id_from_unknown(input_string)
-    
-    if id_from_project:
-        own_info = dc.website_info_from_proj_ids(id_from_project)
-        
-        self_info = []
-        self_info.append(dict(  index=0,\
-                                name=unicode(own_info[0][0], 'utf8'), \
-                                url=kfs.base_url + own_info[0][1], \
-                                nbackers=own_info[0][2], \
-                                image_url=own_info[0][3],\
-                                description=own_info[0][4],\
-                                count=0,\
-                                prediction = '%.0f' % (own_info[0][5]*100)\
-                                    ))
-                                    
-        results = network_graph.find_project_from_project(id_from_project,kfs.num_web_display)
-            
-    elif id_from_backer:
-        
-        print id_from_backer        
-        own_info = dc.website_info_from_backer_ids(id_from_backer)
-        
-        self_info = []
-        self_info.append(dict(  index=0,\
-                                name=unicode(own_info[0][0], 'utf8'), \
-                                url=kfs.base_url + own_info[0][1], \
-                                nbackers=own_info[0][5], \
-                                image_url=own_info[0][2],\
-                                description=own_info[0][4],\
-                                count=0\
-                                    ))
-        
-        results = network_graph.find_project_from_profile(id_from_backer,kfs.num_web_display)   
+    if only_active_flag == 'on':
+        only_active_flag = True
     else:
-        return 'database error'    
+        only_active_flag = False
+        
+    input_id,input_type = input_handler.process_input(input_string)
 
+    if not input_id:
+        return "Oops! We could not find this entry (or a similar match) in the database."
     
-    ids,counts = zip(*results)
-    
-    db_info = dc.website_info_from_proj_ids(ids)
-    
-    base_url = "http://www.kickstarter.com"    
-    
-    results = []
-    for ind,result in enumerate(db_info):
-        count = counts[ids.index(result[7])]        
-        results.append(dict(index=ind,name=unicode(result[0], 'utf8'), url=base_url + result[1], nbackers=result[2], \
-            image_url=result[3],description=result[4],count=count,prediction='%.0f' % (result[5]*100)))
+    if input_type == 'project':
+        rec_ids_and_counts = network_graph.find_project_from_project(input_id,kfs.num_web_display)
+    elif input_type == 'backer':
+        rec_ids_and_counts = network_graph.find_project_from_profile(input_id,kfs.num_web_display)     
+    else:
+        return "Unknown input type"
+        
+    if not rec_ids_and_counts:
+        return "Could not find any recommendations. Project not connected to our project/backer graph."
+        
+    rec_ids,counts = zip(*rec_ids_and_counts)
 
-    results = sorted(results, key=itemgetter('count'), reverse=True)    
-                  
-    return render_template('index.html', self_info=self_info, results=results,input_string=input_string) 
-
+    input_jinja_dict = output_handler.process_output(input_id,input_type)
+    output_jinja_dict = output_handler.process_output(rec_ids,'project')
+    
+    for ind,result in enumerate(output_jinja_dict):
+        count = counts[rec_ids.index(result['idprojects'])]
+        output_jinja_dict[ind]['count'] = count
+        
+    if not output_jinja_dict:
+        return "Error in extracting suggested results from database."
+    
+    output_jinja_dict = sorted(output_jinja_dict, key=itemgetter('count'), reverse=True) 
+    
+    return render_template('index.html', self_info=input_jinja_dict, results=output_jinja_dict,input_string=input_string)
   
 @app.route('/_size_slider')
 def mod_norm():
@@ -92,7 +77,8 @@ def mod_norm():
 def projects():
     """Return list of projects."""
 
-    q = request.args.get('q')    
+    q = request.args.get('q').replace(';','')   
+    
     projects_list = kfs.project_byname_tbl.extract_all('name',"WHERE name LIKE '%%%s%%' LIMIT 5" % q,as_list=True)
     projects_list += kfs.backer_byname_tbl.extract_all('name',"WHERE name LIKE '%%%s%%' LIMIT 5" % q,as_list=True)
 

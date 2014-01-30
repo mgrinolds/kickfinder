@@ -204,7 +204,7 @@ class BackerFinder:
                 if len(set(project_links)) == n_prev_profiles:
                     break
   
-            self.backer_sql.update_value('projects',str(list(set(project_links))),'profile_link',link)    
+            self.backer_sql.update_value('projects',str(list(OrderedDict.fromkeys(project_links))),'profile_link',link)    
             self.backer_sql.update_value('has_projects',1,'profile_link',link) 
             
             print ('----num_found_projects',len(set(project_links)),\
