@@ -13,7 +13,7 @@ import requests
 database_name = 'kickstarter'
 connection = mdb.connect('localhost', 'mgrinolds', gp.get_pw(), database_name) 
 session = requests.Session()
-sleep_time = 2.5 #max random time between scrapes
+sleep_time = 1 #max random time between scrapes
 base_url = 'http://www.kickstarter.com'
 backer_backed_thresh = 10
 num_web_display = 20
@@ -45,8 +45,8 @@ project_byname_tbl = SqlTable(connection,table_name)
 if not project_byname_tbl.table_exists():
     project_byname_tbl.query(create_str)
 
-backer_html_tbl = SqlTable(connection,'backers_html')
-project_html_tbl = SqlTable(connection,'projects_html')
+backer_html_tbl = SqlTable(connection,'backers_all')
+project_html_tbl = SqlTable(connection,'projects_new')
 
 
 

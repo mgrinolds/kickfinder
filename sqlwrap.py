@@ -136,7 +136,8 @@ class SqlTable:
         else:
             return self._queryAllTuple(sql_str)
             
-    def extract_all_manycols_noL(self,ret_col_names,sel_col_name=None,sel_col_values=None,added_clause = None):    
+    def extract_all_manycols_noL(self,ret_col_names,sel_col_name=None,\
+        sel_col_values=None,added_clause = None):    
         if (type(sel_col_values) is list) or (type(sel_col_values) is tuple):
             str_values = str(sel_col_values)[1:-1]    
             
@@ -158,11 +159,11 @@ class SqlTable:
             
         if added_clause:
             sql_str += added_clause
-        
 #        return self._queryAllTuple(sql_str)   
         return self._queryAllDict(sql_str)
      
-    def extract_all_manycols(self,ret_col_names,sel_col_name=None,sel_col_values=None,added_clause = None):    
+    def extract_all_manycols(self,ret_col_names,sel_col_name=None,sel_col_values=None,\
+            added_clause = None,return_type='tuple'):    
         if (type(sel_col_values) is list) or (type(sel_col_values) is tuple):
             str_values = str(sel_col_values)[1:-1]
 
@@ -185,8 +186,11 @@ class SqlTable:
             
         if added_clause:
             sql_str += added_clause
-        
-        return self._queryAllTuple(sql_str)   
+            
+        if return_type == 'tuple':
+            return self._queryAllTuple(sql_str)  
+        else:
+            return self._queryAllDict(sql_str)
     
     def update_value(self,update_col_name,update_col_value,search_col_name,search_col_value):
         sql_str_pre = "UPDATE %s SET %s = " % (self.table_name,update_col_name)
@@ -194,15 +198,25 @@ class SqlTable:
         sql_str = sql_str_pre + '%s' + sql_str_post
         
         pass_tuple = (update_col_value,)
+        return self._write(sql_str,pass_tuple)
         
+    def update_value_numeric_key(self,update_col_name,update_col_value,search_col_name,search_col_value):
+        sql_str_pre = "UPDATE %s SET %s = " % (self.table_name,update_col_name)
+        sql_str_post = " WHERE %s = %d" % (search_col_name,search_col_value)
+        sql_str = sql_str_pre + '%s' + sql_str_post
+        
+        pass_tuple = (update_col_value,)
         return self._write(sql_str,pass_tuple)
     
     def _write(self,sql_str,pass_tuple=None):
         with self.con:   
-            self.cur = self.con.cursor()            
+            self.cur = self.con.cursor()    
+            
             if pass_tuple:
+#                print sql_str % pass_tuple
                 return self.cur.execute(sql_str,pass_tuple)
             else:
+#                print sql_str
                 return self.cur.execute(sql_str)
         
     def _queryOne(self,sql_str,pass_tuple=None):

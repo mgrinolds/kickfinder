@@ -5,12 +5,13 @@ Created on Sun Jan 26 15:36:49 2014
 @author: Mike
 """
 
+from __future__ import division
 import numpy.random as random
 import kickfinder_settings as kfs
 import time
 from collections import OrderedDict
 from math import ceil
-import bs4 as BeautifulSoup
+from bs4 import BeautifulSoup
 
 class ProjectFinder:  
     def __init__(self):
@@ -21,9 +22,17 @@ class ProjectFinder:
         self.sleep_time = kfs.sleep_time
         
     def add_project_names(self,links):
+        put_projects = []        
         for link in links:
+            
+            link = link.split('?')[0]            
             row_dict = put_project_raw_new(link)
-            self.sql.add_row(row_dict)
+            is_new_backer = add_row_ignore_duplicates(self.sql,row_dict)
+
+            if is_new_backer:
+                put_projects.append(link)
+                
+        return put_projects
             
     def get_project_html(self,start_at=None):
         links = self.sql.extract_all('url',"WHERE html IS NULL")
@@ -31,17 +40,18 @@ class ProjectFinder:
         if start_at:
             links = links[start_at:]        
         
-        print len(links)
-        for ind,link in enumerate(links):
-            print (ind,self.url + link)
+        self.get_project_html_from_links(links)   
+           
+    def get_project_html_from_links(self,project_links):
+        print len(project_links)
+        for ind,link in enumerate(project_links):
+            print (ind,self.base_url + link)
 
-            html = pull_html(self.session,self.url + link)  
+            html = pull_html(self.session,self.base_url + link)  
             self.sql.update_value('html',html,'url',link)    
-            sleep_random(self.sleep_time)
-            
+            sleep_random(self.sleep_time)    
 
 class DiscoveryScraper:
-    
     def __init__(self):
         self.sql = kfs.project_html_tbl     
         self.session = kfs.session
@@ -49,28 +59,44 @@ class DiscoveryScraper:
         self.url = kfs.base_url
         self.sleep_time = kfs.sleep_time
 
-    def scrape_single(self,iterInd=0):   
-        html = pull_html(self.session,self.url + '/discover/advanced?page=%d&sort=popularity' \
-             % iterInd) 
- 
+    def scrape_single(self,iterInd=1):   
+#        pull_location = "end_date"`
+        pull_location = "magic"
+        html = pull_html(self.session,self.url + '/discover/advanced?page=%d&sort=%s' \
+             % (iterInd,pull_location))
+             
         links = get_links(html)
         project_links = get_project_links(links)     
         
+        put_projects = []
         for link in project_links:
-            row_dict = put_project_raw(link)    
-            add_row_ignore_duplicates(self.sql,row_dict)
+            link = link.split('?')[0]            
+            row_dict = put_project_raw_new(link)    
+            is_new_project = add_row_ignore_duplicates(self.sql,row_dict)
+
+#            is_new_project = 1            
+            
+            if is_new_project:
+                put_projects.append(link)
+            
+        put_projects = list(OrderedDict.fromkeys(put_projects))     
+        return put_projects
         
     def scrape_range(self,min_ind,max_ind):
         min_ind = max(0,min_ind)
-        max_ind = min(len(self.iter_vals),max_ind)
         max_ind = max(min_ind,max_ind)
         
         print (min_ind,max_ind)        
-        
-        for ind in range(min_ind,max_ind):
+        put_projects = []
+        for ind in range(min_ind,max_ind+1):
             print ind
-            self.scrape_single(ind)  
-            sleep_random(self.sleep_time)    
+            added_projects = self.scrape_single(ind)  
+            sleep_random(self.sleep_time)            
+            
+            if added_projects:            
+                [put_projects.append(proj_link) for proj_link in added_projects]
+           
+        return put_projects
     
     def scrape_html_from_db(self):
         links_without_html = self.sql.extract_all('name',\
@@ -97,6 +123,18 @@ class BackerFinder:
         
         self.session = kfs.session      
         
+        self.default_seeds = [1776599511,\
+                    2078194195,\
+                    85643262,\
+                    623922337,\
+                    1458268588,\
+                    1125303128,\
+                    16890729,\
+                    1388367600,\
+                    1361023761,\
+                    991111772,\
+                    2019078102]        
+        
         self.url = kfs.base_url      
         self.sleep_time = kfs.sleep_time
 
@@ -108,7 +146,7 @@ class BackerFinder:
             backer_link = '/profile/%d' % id
             row_dict = put_backer_raw('',backer_link,seed=1)              
             add_row_ignore_duplicates(self.backer_sql,row_dict)    
-       
+
     def scrape_from_projects(self,maxsearch=None,startfrom=0):
         all_projects = self.project_sql.extract_all('name')
         used_projects = self.backer_sql.extract_all('discovered_from')
@@ -122,28 +160,35 @@ class BackerFinder:
 
         print ('total:',len(unused_projects))
 
-        for ind,full_url in enumerate(unused_projects):
+        if maxsearch:
+            unused_projects = unused_projects[:maxsearch]
+    
+        return self.scrape_from_project_links(unused_projects)
+    
+    def scrape_from_project_links(self,links):
+        put_backers = []        
+        for ind,full_url in enumerate(links):
             
             no_ref_link = full_url.split('?')[0]
             print ('project:',ind,no_ref_link)
             
-            try:
-                self.scrape_single_project(no_ref_link,full_url)
-            except:
-                pass
+            added_backers = self.scrape_single_project(no_ref_link,full_url)
+#            added_backers = []
             
-            if maxsearch and ind > maxsearch:
-                break
+            if added_backers:
+                [put_backers.append(backer) for backer in added_backers]
+            
+        return put_backers
 
-    
     def scrape_single_project(self,project_link,discovery_link):
-        seeders = self.backer_sql.extract_all('profile_link','WHERE seed_for_user_search=1')
+        seeders = self.backer_sql.extract_all('profile_link','WHERE seed_for_user_search= 1 ')
 
         add_profiles = []
         add_num_backed = []
         for ind,seed in enumerate(seeders):
+            seed = seed[0]
             url = self.url + self.project_url % (project_link,seed.split('/')[-1])
-            print ('----page:',project_link,ind,url)
+#            print ('----page:',project_link,ind,url)
 
             html = pull_html(self.session,url)  
             
@@ -156,39 +201,87 @@ class BackerFinder:
             
             sleep_random(self.sleep_time)        
     
-            print ('n_prev_profiles',n_prev_profiles)
+#            print ('n_prev_profiles',n_prev_profiles,'n_found_profiles',len(set(add_profiles)))
     
             if not len(add_num_backed) or n_prev_profiles == len(set(add_profiles)):
                 break
 
-        unique_entries = 0
-    
+        add_profiles = list(OrderedDict.fromkeys(add_profiles))   
+
+        put_backers = []
         for backer,num in zip(add_profiles,add_num_backed):
             row_dict = put_backer_raw('',backer,seed=0,num_projects=num,discovered_link=discovery_link)            
-            add_row_ignore_duplicates(self.backer_sql,row_dict)  
+            is_new_backer = add_row_ignore_duplicates(self.backer_sql,row_dict)  
+
+#            is_new_backer = 1
+
+            if is_new_backer:
+                put_backers.append(backer)
     
-        print ('total_entries',len(set(add_profiles)),'unique_entries',unique_entries)    
-        return (add_profiles,add_num_backed) 
+        print ('total_entries',len(set(add_profiles)),'unique_entries',len(put_backers))
+        return put_backers 
   
     def scrape_html_from_db(self,num_proj_thresh=0):
         links_without_html = self.backer_sql.extract_all('profile_link',\
             "WHERE has_projects = 0 AND num_projects > %s" % num_proj_thresh)
-            
-        num_projects = self.backer_sql.extract_all('num_projects',\
-            "WHERE has_projects = 0 AND num_projects > %s" % num_proj_thresh) 
-             
+        
+        return self.scrape_from_project_links(links_without_html)
+#        num_projects = self.backer_sql.extract_all('num_projects',\
+#            "WHERE has_projects = 0 AND num_projects > %s" % num_proj_thresh) 
+#             
+#        links_per_page = 32.  
+#    
+#        num_pages = [int(ceil(page/links_per_page)) for page in num_projects]     
+#        
+#        grab_links = links_without_html
+#        for ind,link in enumerate(grab_links):
+#            project_links = []
+#            for sub_ind in range(num_pages[ind]):
+#                url = self.profile_url % (link,sub_ind + 1)
+#                
+#                html = pull_html(self.session,url)  
+#                            
+#                if sub_ind == 0:
+#                    self.backer_sql.update_value('profile_html',html,'profile_link',link)    
+#                    self.backer_sql.update_value('has_html',1,'profile_link',link)    
+#                
+#                n_prev_profiles = len(set(project_links))                   
+#                
+#                project_links += get_project_links(get_links(html))
+#                
+#                sleep_random(self.sleep_time)        
+#                
+#                print ('-------',ind,sub_ind,url,n_prev_profiles)               
+#                
+#                if len(set(project_links)) == n_prev_profiles:
+#                    break
+#  
+#            self.backer_sql.update_value('projects',str(list(OrderedDict.fromkeys(project_links))),'profile_link',link)    
+#            self.backer_sql.update_value('has_projects',1,'profile_link',link) 
+#            
+#            print ('----num_found_projects',len(set(project_links)),\
+#                'num_backed',num_projects[ind]) 
+                
+    def scrape_html_from_backer_links(self,backer_links):
         links_per_page = 32.  
-    
+        
+        db_info = self.backer_sql.extract_all_manycols('profile_link,num_projects',\
+            'profile_link',backer_links)
+
+        backer_links,num_projects = zip(*db_info) 
+      
         num_pages = [int(ceil(page/links_per_page)) for page in num_projects]     
         
-        grab_links = links_without_html
-        for ind,link in enumerate(grab_links):
+        total_project_links = []
+        for ind,link in enumerate(backer_links):  
             project_links = []
             for sub_ind in range(num_pages[ind]):
-                url = self.profile_url % (link,sub_ind + 1)
+                url = self.url + self.profile_url % (link,sub_ind + 1)
+                
+                print url
                 
                 html = pull_html(self.session,url)  
-                            
+ 
                 if sub_ind == 0:
                     self.backer_sql.update_value('profile_html',html,'profile_link',link)    
                     self.backer_sql.update_value('has_html',1,'profile_link',link)    
@@ -208,34 +301,41 @@ class BackerFinder:
             self.backer_sql.update_value('has_projects',1,'profile_link',link) 
             
             print ('----num_found_projects',len(set(project_links)),\
-                'num_backed',num_projects[ind]) 
-                
+                'num_backed',num_projects[ind])
+            
+            if project_links:
+                [total_project_links.append(link) for link in project_links]
+            
+        return total_project_links
                 
 def pull_html(session,url):
     html = None
     while not html:
         try:
             pull = session.get(url)
-        except:
+        except Exception as e:
+            print 'pull error: ' + str(e.args[0]) 
+            print 'sleeping...'
             time.sleep(120)
-            print 'pull error'   
     
         html = pull.text.encode('ascii','ignore') 
     return html
 
 def sleep_random(sleep_time):
     sleep_time = sleep_time/10 + sleep_time*random.rand()
-    print sleep_time
+#    print sleep_time
     time.sleep(sleep_time)  
     
 def add_row_ignore_duplicates(sql_table,row_dict):
     try:    
         sql_table.add_row(row_dict)
     except Exception as e:
-        if 'Duplicate' in e.args[1]:
-            pass
+        if 'Duplicate' in e.args[1]:          
+            return False
         else:
             raise e
+    
+    return True
             
 def get_links(html):
     soup = BeautifulSoup(html)

@@ -14,7 +14,7 @@ class DBconverter():
         
         self.backer_byname = kfs.backer_byname_tbl
         self.project_byname = kfs.project_byname_tbl
-    
+
     def proj_id_from_unknown(self,input_str): 
         safe_str = input_str.replace(';','')
         
@@ -45,7 +45,6 @@ class DBconverter():
         db_info = self.backer_byname.extract_single('idbackers','name',name)   
         return self._parse_return(db_info)    
     
-    
     def proj_id_from_link(self,links):
         db_info = self.project_graph.extract_all_manycols('idprojects','url',links)
         return self._parse_return(db_info)
@@ -53,7 +52,6 @@ class DBconverter():
     def backer_id_from_link(self,links):
         db_info = self.backer_graph.extract_all_manycols('idbackers','profile_link',links)
         return self._parse_return(db_info)
-         
          
     def proj_name_from_id(self,ids):
         db_info = self.project_graph.extract_all_manycols('name','idprojects',ids)
