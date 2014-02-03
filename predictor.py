@@ -36,16 +36,17 @@ class Predictor:
                     'nrewards',
                     'body_length',
                     'nexternal_links',
-                    'project_duration']
+                    'project_duration',
+                    'currency',
+                    'nquestions',
+                    'has_website',
+                    'website_length',
+
+                    'r0_10','r10_25','r25_40',
+                    'r40_60','r60_100','r100_200',
+                    'r200_500','r500']
                     
-#                    'currency',
-#                    'nquestions',
-#                    'has_website',
-#                    'website_length',
-#                    'nlimited_rewards',
-#                    'r0_10','r10_25','r25_40',
-#                    'r40_60','r60_100','r100_200',
-#                    'r200_500','r500']
+#                                        'nlimited_rewards',
 
 
         self.feature_fields = """nbackers, 
@@ -67,25 +68,23 @@ class Predictor:
                     npictures,
                     nupdates,
                     nexternal_links,
-
-                    """
-#                    nlimited_rewards,
-#                    r0_10,
-#                    r10_25,
-#                    r25_40,
-#                    r40_60,
-#                    r60_100,
-#                    r100_200,
-#                    r200_500,
-#                    r500,
-#                    currency,
-#                    nquestions,
-#                    has_website,
-#                    website_length,              
+                    r0_10,
+                    r10_25,
+                    r25_40,
+                    r40_60,
+                    r60_100,
+                    r100_200,
+                    r200_500,
+                    r500,
+                    currency,
+                    nquestions,
+                    has_website,
+                    website_length, 
+                                        """
         
 
     def predict(self,bupdate_db=0):
-        results = self.sql.query_dict('SELECT %s FROM projects WHERE ncomments IS NOT NULL' % (self.feature_fields + self.outcome_field))
+        results = self.sql.query_dict('SELECT %s FROM %s WHERE ncomments IS NOT NULL'  % (self.feature_fields + self.outcome_field,self.sql.table_name))
 
         df = DataFrame.from_records(results)
         
@@ -143,7 +142,7 @@ class Predictor:
         
 if __name__ == '__main__': 
     pred = Predictor()
-    p,pb,act = pred.predict(0)
+    p,pb,act = pred.predict(1)
 #    df,X, y= pred.predict(0)    
     
     thresh = 0.25

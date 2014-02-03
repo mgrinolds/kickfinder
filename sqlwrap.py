@@ -30,11 +30,13 @@ class SqlTable:
         with self.con:      
             self.cur = self.con.cursor(mdb.cursors.DictCursor)
             
+            print query_str
             if pass_tuple:
                 self.cur.execute(query_str,pass_tuple)
             else:
                 self.cur.execute(query_str)
             
+
             return self.cur.fetchall()  
     
     def table_exists(self):     
