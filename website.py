@@ -27,7 +27,11 @@ def index():
 @app.route('/', methods=['POST'])
 def search():
     input_string =  request.form['input-name']   
-    only_active_flag = request.form['only_active']
+    
+    if request.form.has_key('only_active'):
+        only_active_flag = request.form['only_active']
+    else:
+        only_active_flag = 'on'
    
     if not input_string:
         return render_template('index.html')

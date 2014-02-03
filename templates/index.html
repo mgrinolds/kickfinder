@@ -44,7 +44,14 @@
 
   </head>
 
-  <body data-spy="scroll" data-offset="0" data-target="#navigation">
+  <body data-spy="scroll" data-offset="0" data-target="#navigation" 
+
+        {% if not input_string %}
+
+        background="static\background.jpg" style="background-repeat:no-repeat; background-size:cover"
+
+        {% endif %}
+                >
 
     <!-- Fixed navbar -->
         <div id="navigation" class="navbar navbar-default navbar-fixed-top">
@@ -55,18 +62,73 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
               </button>
-              <a class="navbar-brand" href="#"><b>kickfinder</b></a>
+              <a class="navbar-brand" href=""><b>kickfinder</b></a>
             </div>
             <div class="navbar-collapse collapse">
               <ul class="nav navbar-nav">
-                <li class="active"><a href="#home" class="smothscroll">Home</a></li>
-                <li><a href="#desc" class="smothscroll">Description</a></li>
-                <li><a href="#showcase" class="smothScroll">Showcase</a></li>
+                <li class="active"><a href="" class="smothscroll">Home</a></li>
+                <li><a href="#about" class="smothscroll">About</a></li>
                 <li><a href="#contact" class="smothScroll">Contact</a></li>
               </ul>
             </div><!--/.nav-collapse -->
           </div>
         </div>
+
+    {% if not input_string %}
+
+    <section id="home" name="home"></section>
+    <div id="headerwrap">
+        <div class="container">
+            <div class="row centered">
+                <div class="col-lg-12">
+                    
+                </div>
+
+                <div class="col-lg-2"></div>
+
+                <div class="col-lg-8">
+                    <br> <br> <br> <br> <br> <br> <br> <br>
+
+                    <div id="outer" style="width:100%" >  
+                        <div id="inner" 
+                            style="background-color:#FFFFFF; width:70%; margin: 0 auto;
+                                    border:2px solid; border-radius:45px;">
+                            <h1>kick<b>finder</b></h1>
+                            <h3>personalized kickstarter recommendations</h3>
+                            <br>
+
+                            <h5>enter a kickstarter project's name or a backer's name:</h5>
+                            <form role="form" action="." method="POST">
+                                  <div class="form-group">
+                
+                                    <input type="text" name="input-name" id="projects" class="form-control" 
+                                        value="{{  input_string }}" placeholder="project or profile" width="300">
+                                    
+                                    <button type="submit" class="btn btn-large btn-success" 
+                                            id="submit" style="height:40px">SUBMIT</button>
+                                    
+                                  </div>
+        
+                          
+                          </form>
+                        </div>
+                    </div>
+
+                     
+
+    
+
+
+  
+
+
+                <div class="col-lg-2"></div>
+            </div>
+        </div> <!--/ .container -->
+    </div><!--/ #head -->
+
+
+    {% else %}
 
     <section id="home" name="home"></section>
     <div id="headerwrap">
@@ -101,7 +163,7 @@
                         <button type="submit" class="btn btn-large btn-success" 
                             id="submit">SUBMIT</button>
                         <input type="checkbox" name="only_active" >only active projects</input>
-                        <input type="hidden" name="only_active" value="off" />
+                        <input type="hidden" name="only_active" value="off"></input>
                   </div>  
                   
                   </form>
@@ -240,8 +302,9 @@
                 <div class="col-lg-1"></div>
             </div>
         </div> <!--/ .container -->
-    </div><!--/ #head
-
+    </div><!--/ #head -->
+    
+    {% endif %}
 
 <!-- Bootstrap core JavaScript
 ================================================== -->
