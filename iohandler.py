@@ -91,7 +91,9 @@ class OutputHandler():
 
         for ind,result in enumerate(results):
             results[ind]['url'] = kfs.base_url + results[ind]['url']
-            results[ind]['prediction'] = '%.0f' % (results[ind]['prediction']*100)
+
+            if results[ind]['prediction']:
+                results[ind]['prediction'] = '%.0f' % (results[ind]['prediction']*100)
 
         if not results: return None               
         return results

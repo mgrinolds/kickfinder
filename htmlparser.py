@@ -151,7 +151,7 @@ class ProjectParser:
     
     def parse_unparsed_html(self):
         ids = self.html_sql.extract_all_manycols('idprojects',\
-            added_clause="WHERE html IS NOT NULL AND description IS NULL")
+            added_clause="WHERE html IS NOT NULL AND r500 IS NULL")
             
         self.parse_html_from_ids(ids)
     
@@ -340,6 +340,6 @@ class ProjectParser:
         
 if __name__ == '__main__':
 
-    bp = BackerParser()
+    pp = ProjectParser()
     
-    a = bp.convert_links_to_ids()
+    pp.parse_unparsed_html()

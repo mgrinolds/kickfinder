@@ -108,8 +108,10 @@ class NetworkGraph:
     
         common_tuple = nnn_count.most_common(len(nnn_count)//5)
         
-        counts = np.array([count for link, count in common_tuple if count > 50],dtype='float')
-        graph_links = [link for link, count in common_tuple if count > 50]
+        count_thresh = min(50,nnn_count.most_common(1)[0][1]//3)
+        
+        counts = np.array([count for link, count in common_tuple if count > count_thresh],dtype='float')
+        graph_links = [link for link, count in common_tuple if count > count_thresh]
 
         if not graph_links:
             return None
@@ -190,12 +192,13 @@ if __name__ == '__main__':
     dc = dbc.DBconverter()
     proj_id = dc.proj_id_from_link(['/projects/elitecards/one-million-bicycle-playing-cards-deck'])
 
-    preds = ng.find_project_from_project(48988,100)
-    for pred, count in preds:
-        print (pred,count)
-        print (dc.proj_name_from_id(pred),count)
+#    preds = ng.find_project_from_project(48988,100)
+#    for pred, count in preds:
+#        print (pred,count)
+#        print (dc.proj_name_from_id(pred),count)
      
 #    backer_id = dc.backer_id_from_link(['/profile/1044791950']) 
-#    preds = ng.find_project_from_profile(backer_id,10)
-#    for pred, count in preds:
-#        print (dc.proj_name_from_id(pred),count)
+    backer_id = dc.backer_id_from_name('Terry Park')
+    preds = ng.find_project_from_profile(backer_id,10)
+    for pred, count in preds:
+        print (dc.proj_name_from_id(pred),count)
