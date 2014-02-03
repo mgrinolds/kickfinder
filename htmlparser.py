@@ -7,6 +7,7 @@ Created on Sun Jan 26 16:14:28 2014
 
 import kickfinder_settings as kfs
 from bs4 import BeautifulSoup
+import re
 
 class BackerParser:
     def __init__(self):
@@ -57,13 +58,14 @@ class BackerParser:
             html = self.html_sql.extract_single('profile_html','idbackers',id_value)
             
             if not html:
-                print 'did not find id: ' + str(id)
+                print 'did not find id: ' + str(id_value)
                 continue
             
             parsed_dict = self._parse_backer_html(html)
             
             if not parsed_dict:
-                print 'could not parse html: ' + str(id)
+                print 'could not parse html: ' + str(id_value)
+                self.graph_sql.update_value_numeric_key('tried_parsing',1,'idbackers',id_value)
                 continue
             
             col_names = parsed_dict.keys()
@@ -167,13 +169,14 @@ class ProjectParser:
             html = self.html_sql.extract_single('html','idprojects',id_value)
             
             if not html:
-                print 'did not find id: ' + str(id)
+                print 'did not find id or html is null: ' + str(id_value)
                 continue
             
             parsed_dict = self._parse_project_html(html)
             
             if not parsed_dict:
-                print 'could not parse html: ' + str(id)
+                print 'could not parse html: ' + str(id_value)
+                self.graph_sql.update_value_numeric_key('tried_parsing',1,'idprojects',id_value)
                 continue
             
             col_names = parsed_dict.keys()
@@ -188,78 +191,84 @@ class ProjectParser:
         try:    
             name = soup.find("meta", {"property":"og:title"})['content']
             
-            image_url = soup.find("meta", {"property":"og:image"})['content']
-            description = soup.find("meta", {"property":"og:description"})['content']
-            
             latitude = float(soup.find("meta", {"property":"kickstarter:location:latitude"})['content'])
             longitude = float(soup.find("meta", {"property":"kickstarter:location:latitude"})['content'])
-            
-            pledged = float(soup.find('div',{'id':'pledged'})['data-pledged'])
-            goal = float(soup.find('div',{'id':'pledged'})['data-goal'])
-            percent_raised = float(soup.find('div',{'id':'pledged'})['data-percent-raised'])
-            currency = soup.find('data',{'itemprop':'Project[pledged]'})['data-currency']
-            
-        #    delivery_date = soup.find('time')['datetime'] 
-        #    end_date_str = soup.find('span',{"id":"project_duration_data"})['data-end_time']   
-        #    end_date = datetime.strptime(end_date[5:-15],'%d %b %Y')
-            
-            hours_remaining = float(soup.find('span',{"id":"project_duration_data"})['data-hours-remaining'])
-            project_duration = float(soup.find('span',{"id":"project_duration_data"})['data-duration'])  
-            
-            video = soup.find("meta", {"property":"og:video"})    
-            
-            category = soup.find("li", {"class":"category"})['data-project-parent-category']
-            
-            body = BeautifulSoup(str(soup.find_all('div',{"class":"full-description"})))  
-            npictures = body.find_all('figure').__len__()    
-            
-            external_links = [link.get('href') for link in body.find_all('a')]    
-            body_length = soup.find('div',{"class":"full-description"}).getText().__len__()
-            
-            other_projects = BeautifulSoup(str(soup.find_all("li", {"class":"projects"})))
-            other_projects_string = other_projects.text
-            
-            website = soup.find('a',{'class':'popup'}).getText()        
-            
-            if website and (not 'facebook' in website):
-                has_website = 1
-                website_length = len(website)
-            else:
-                website_length = len(website)
-                has_website = 0
-            
-            
-            if 'First created' in other_projects_string:
-                first_created = True
-            else:
-                first_created = False
-                
-            if '0 backed' in other_projects_string:
-                first_backed = True
-            else:
-                first_backed = False
-            
-            facebook = BeautifulSoup(str(soup.find_all("li", {"class":"facebook"}))) 
-            connected_facebook = not "Has not connected Facebook" in facebook.text
-        
-            nbackers = int(soup.find('data',{'itemprop':'Project[backers_count]'}).getText().replace(',', ''))
-            ncomments = int(soup.find('data',{'itemprop':'Project[comments_count]'}).getText().replace(',', ''))
-            nupdates = int(soup.find('span',{'id':'updates_count'})['data-updates-count'].replace(',', ''))   
-                     
-            rewards = soup.find_all('li',{"class":"NS-projects-reward"})
-            reward_soup = BeautifulSoup(str(rewards))
-            
-            nlimited_rewards = reward_soup.find_all('span',{'class':'limited-number'}).__len__()
-            
-            reward_list = reward_soup.find_all('span',{'class':'money'})
-            reward_str = [item.getText() for item in reward_list]
-            reward_vals = [float(item[1:].replace(',','')) for item in reward_str]
-                
-            nquestions = soup.find_all('span',{'class':'question'}).__len__()
-        
         except Exception as e:
             print e.args[0]
             return None
+        
+        image_url = soup.find("meta", {"property":"og:image"})['content']
+        description = soup.find("meta", {"property":"og:description"})['content']
+        
+        pledged = float(soup.find('div',{'id':'pledged'})['data-pledged'])
+        goal = float(soup.find('div',{'id':'pledged'})['data-goal'])
+        percent_raised = float(soup.find('div',{'id':'pledged'})['data-percent-raised'])
+        currency = soup.find('data',{'itemprop':'Project[pledged]'})['data-currency']
+        
+    #    delivery_date = soup.find('time')['datetime'] 
+    #    end_date_str = soup.find('span',{"id":"project_duration_data"})['data-end_time']   
+    #    end_date = datetime.strptime(end_date[5:-15],'%d %b %Y')
+        
+        hours_remaining = float(soup.find('span',{"id":"project_duration_data"})['data-hours-remaining'])
+        project_duration = float(soup.find('span',{"id":"project_duration_data"})['data-duration'])  
+        
+        video = soup.find("meta", {"property":"og:video"})    
+        
+        category = soup.find("li", {"class":"category"})['data-project-parent-category']
+        
+        body = BeautifulSoup(str(soup.find_all('div',{"class":"full-description"})))  
+        npictures = body.find_all('figure').__len__()    
+        
+        external_links = [link.get('href') for link in body.find_all('a')]    
+        body_length = soup.find('div',{"class":"full-description"}).getText().__len__()
+        
+        other_projects = BeautifulSoup(str(soup.find_all("li", {"class":"projects"})))
+        other_projects_string = other_projects.text
+        
+        website_div = soup.find('a',{'class':'popup'})      
+        if website_div:
+            website = website_div.getText()
+        else:
+            website = None
+        
+        if website and (not 'facebook' in website):
+            has_website = 1
+            website_length = len(website)
+        else:
+            website_length = 0
+            has_website = 0
+        
+        
+        if 'First created' in other_projects_string:
+            first_created = True
+        else:
+            first_created = False
+            
+        if '0 backed' in other_projects_string:
+            first_backed = True
+        else:
+            first_backed = False
+        
+        facebook = BeautifulSoup(str(soup.find_all("li", {"class":"facebook"}))) 
+        connected_facebook = not "Has not connected Facebook" in facebook.text
+    
+        nbackers = int(soup.find('data',{'itemprop':'Project[backers_count]'}).getText().replace(',', ''))
+        ncomments = int(soup.find('data',{'itemprop':'Project[comments_count]'}).getText().replace(',', ''))
+        nupdates = int(soup.find('span',{'id':'updates_count'})['data-updates-count'].replace(',', ''))   
+                 
+        rewards = soup.find_all('li',{"class":"NS-projects-reward"})
+        reward_soup = BeautifulSoup(str(rewards))
+        
+        nlimited_rewards = reward_soup.find_all('span',{'class':'limited-number'}).__len__()
+        
+        reward_list = reward_soup.find_all('span',{'class':'money'})
+        reward_str = [item.getText() for item in reward_list]
+#        reward_vals = [float(item[1:].replace(',','')) for item in reward_str]
+        reward_vals = [float(re.sub("\D", "", item)) for item in reward_str]       
+          
+        nquestions = soup.find_all('span',{'class':'question'}).__len__()
+        
+
         
     
         out_dict = dict()  

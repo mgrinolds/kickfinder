@@ -186,7 +186,7 @@ class SqlTable:
             
         if added_clause:
             sql_str += added_clause
-            
+
         if return_type == 'tuple':
             return self._queryAllTuple(sql_str)  
         else:

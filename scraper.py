@@ -30,6 +30,7 @@ class ProjectFinder:
             is_new_backer = add_row_ignore_duplicates(self.sql,row_dict)
 
             if is_new_backer:
+                print row_dict
                 put_projects.append(link)
                 
         return put_projects
@@ -71,12 +72,14 @@ class DiscoveryScraper:
         put_projects = []
         for link in project_links:
             link = link.split('?')[0]            
-            row_dict = put_project_raw_new(link)    
+            row_dict = put_project_raw_new(link) 
+            
             is_new_project = add_row_ignore_duplicates(self.sql,row_dict)
 
 #            is_new_project = 1            
             
             if is_new_project:
+                print row_dict
                 put_projects.append(link)
             
         put_projects = list(OrderedDict.fromkeys(put_projects))     
@@ -86,10 +89,10 @@ class DiscoveryScraper:
         min_ind = max(0,min_ind)
         max_ind = max(min_ind,max_ind)
         
-        print (min_ind,max_ind)        
+#        print (min_ind,max_ind)        
         put_projects = []
         for ind in range(min_ind,max_ind+1):
-            print ind
+#            print ind
             added_projects = self.scrape_single(ind)  
             sleep_random(self.sleep_time)            
             
@@ -104,9 +107,9 @@ class DiscoveryScraper:
             
         grab_links = links_without_html
 
-        print len(grab_links)
+#        print len(grab_links)
         for ind,link in enumerate(grab_links):
-            print (ind,link)
+#            print (ind,link)
             
             html = pull_html(self.session,self.url + link)  
 
@@ -158,7 +161,7 @@ class BackerFinder:
         unused_projects = list(OrderedDict.fromkeys(unused_projects))        
         unused_projects = unused_projects[startfrom:]
 
-        print ('total:',len(unused_projects))
+#        print ('total:',len(unused_projects))
 
         if maxsearch:
             unused_projects = unused_projects[:maxsearch]
@@ -168,9 +171,8 @@ class BackerFinder:
     def scrape_from_project_links(self,links):
         put_backers = []        
         for ind,full_url in enumerate(links):
-            
             no_ref_link = full_url.split('?')[0]
-            print ('project:',ind,no_ref_link)
+#            print ('project:',ind,no_ref_link)
             
             added_backers = self.scrape_single_project(no_ref_link,full_url)
 #            added_backers = []
@@ -191,7 +193,7 @@ class BackerFinder:
 #            print ('----page:',project_link,ind,url)
 
             html = pull_html(self.session,url)  
-            
+        
             profile_links, num_projects_backed = get_backer_link_and_numbers(html)
             
             n_prev_profiles = len(set(add_profiles))            
@@ -206,19 +208,28 @@ class BackerFinder:
             if not len(add_num_backed) or n_prev_profiles == len(set(add_profiles)):
                 break
 
-        add_profiles = list(OrderedDict.fromkeys(add_profiles))   
+        unique_add_profiles = list(OrderedDict.fromkeys(add_profiles))   
 
+        print 'add_profiles_len: %d' % len(add_profiles)
+        print 'num_backed_len: %d' % len(add_num_backed)
+
+        unique_add_num_backed = [add_num_backed[add_profiles.index(link)] \
+                                for link in unique_add_profiles]
         put_backers = []
-        for backer,num in zip(add_profiles,add_num_backed):
+        for backer,num in zip(unique_add_profiles,unique_add_num_backed):
+            
             row_dict = put_backer_raw('',backer,seed=0,num_projects=num,discovered_link=discovery_link)            
+
+            
             is_new_backer = add_row_ignore_duplicates(self.backer_sql,row_dict)  
 
 #            is_new_backer = 1
-
+            
             if is_new_backer:
+                print row_dict
                 put_backers.append(backer)
     
-        print ('total_entries',len(set(add_profiles)),'unique_entries',len(put_backers))
+#        print ('total_entries',len(set(add_profiles)),'unique_entries',len(put_backers))
         return put_backers 
   
     def scrape_html_from_db(self,num_proj_thresh=0):
@@ -278,7 +289,7 @@ class BackerFinder:
             for sub_ind in range(num_pages[ind]):
                 url = self.url + self.profile_url % (link,sub_ind + 1)
                 
-                print url
+#                print url
                 
                 html = pull_html(self.session,url)  
  
@@ -292,7 +303,7 @@ class BackerFinder:
                 
                 sleep_random(self.sleep_time)        
                 
-                print ('-------',ind,sub_ind,url,n_prev_profiles)               
+#                print ('-------',ind,sub_ind,url,n_prev_profiles)               
                 
                 if len(set(project_links)) == n_prev_profiles:
                     break
@@ -300,7 +311,7 @@ class BackerFinder:
             self.backer_sql.update_value('projects',str(list(OrderedDict.fromkeys(project_links))),'profile_link',link)    
             self.backer_sql.update_value('has_projects',1,'profile_link',link) 
             
-            print ('----num_found_projects',len(set(project_links)),\
+            print (link,'----num_found_projects',len(set(project_links)),\
                 'num_backed',num_projects[ind])
             
             if project_links:
@@ -313,12 +324,12 @@ def pull_html(session,url):
     while not html:
         try:
             pull = session.get(url)
+            html = pull.text.encode('ascii','ignore') 
         except Exception as e:
             print 'pull error: ' + str(e.args[0]) 
             print 'sleeping...'
             time.sleep(120)
-    
-        html = pull.text.encode('ascii','ignore') 
+
     return html
 
 def sleep_random(sleep_time):
@@ -350,13 +361,19 @@ def get_backer_link_and_numbers(html):
     
     backer_links = []
     num_backed = []
+
     for data in backer_data:
 
         backer_links.append(get_profile_links(get_links(str(data)))[0])
         try:   
             num_backed.append(get_num_projects_backed(str(data))[0])
+            found = 1
         except:
-            num_backed.append(0)    
+            num_backed.append(0) 
+            found = 0
+            
+#        print (backer_links[-1],num_backed[-1],found)           
+                   
         
     return (backer_links,num_backed)
 
@@ -430,3 +447,10 @@ if __name__ == '__main__':
 #    bf.scrape_from_projects(100000,1600)
 #    bf.scrape_html_from_db(25)
 #    pf.get_project_html()
+    
+    link =  '/projects/adamgreen/adam-greens-aladdin-feature-film'
+    
+    bf.scrape_from_project_links([link])
+    
+#    get_backer_link_and_numbers(html)
+#    soup = BeautifulSoup(html)    

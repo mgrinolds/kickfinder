@@ -4,11 +4,11 @@ Created on Wed Jan 29 22:16:26 2014
 
 @author: Mike
 """
-import kickfinder_settings as kfs
 import scraper 
 import htmlparser
 import dbsyncher
 import cPickle
+import kickfinder_settings as kfs
 
 class AutoScraper():
     
@@ -30,28 +30,51 @@ class AutoScraper():
 
     def autoscrape(self):
         
-        self._find_recent_projects(0)
+        print '***** find recent projects *****'
+        self._find_recent_projects(5)
+        print '***** find backers *****'
         self._find_backers()
+        print '***** scrape backers *****'
         self._scrape_backers()
+        print '***** scrape projects *****'
         self._scrape_projects()
         
-        self._update_project_graph_db()
-        self._update_backer_graph_db() 
+        print '***** copy projects to graph *****'
+        self._update_project_graph_db(bMaintain = True)
+        print '***** copy backers to graph *****'
+        self._update_backer_graph_db(bMaintain = True)
         
-        self._parse_projects()
-        self._parse_backers()
+        print '***** parse projects *****'
+        self._parse_projects(bMaintain = True)
         
-        self._update_project_byname_db()
-        self._update_backer_byname_db()   
-
-        self._init_status()
+        print '***** parse backers *****'
+        self._parse_backers(bMaintain = True)
+        
+        print '***** copy projects to byname *****'
+        self._update_project_byname_db(bMaintain = True)
+        
+        print '***** copy backers to byname *****'
+        self._update_backer_byname_db(bMaintain = True)
+        
+    def table_maintainance(self):
+#        self._init_status()
+#        
+#        self._update_backer_graph_db(bMaintain=True)
+#        
+#        self._update_project_graph_db(bMaintain=True)
+#        
+#        self._parse_projects(bMaintain=True)
+#        
+#        self._parse_backers(bMaintain=True)
+#        
+#        self._update_project_byname_db(bMaintain=True)
+        
+        self._update_backer_byname_db(bMaintain=True)
 
     def _init_status(self):
         self.status['current_step'] = None
         self.status['current_vars'] = None
-        self.status['project_ids'] = None
         self.status['project_links'] = None
-        self.status['backer_ids'] = None
         self.status['backer_links'] = None
 
     def _find_recent_projects(self,npages):        
@@ -110,49 +133,70 @@ class AutoScraper():
                 
         self._save_to_pickle()  
     
-    def _update_project_graph_db(self):
+    def _update_project_graph_db(self,bMaintain=False):
         self.status['current_step'] = '_update_project_graph_db'
         self.status['current_vars'] = None
         
+        if bMaintain:
+            sql_str = """SELECT url FROM %s
+                            WHERE idprojects NOT IN
+                            (SELECT %s.idprojects FROM %s)""" \
+                            % (self.syncher.project_html.table_name, \
+                            self.syncher.project_graph.table_name, \
+                            self.syncher.project_graph.table_name)
+                            
+            print sql_str
+            data =  self.syncher.project_html.query(sql_str)
+            print 'number of items to update: %d' % len(data)
+            COLUMN = 0
+            self.status['project_links'] = [elem[COLUMN] for elem in data]
+                
         project_links = self.status['project_links']
         if project_links:        
             self.syncher.add_projects_from_html_to_graph(project_links)  
                 
         self._save_to_pickle() 
     
-    def _update_backer_graph_db(self):
+    def _update_backer_graph_db(self,bMaintain=False):
         self.status['current_step'] = '_update_backer_graph_db'
         self.status['current_vars'] = None
         
+        if bMaintain:
+            sql_str = """SELECT profile_link FROM %s
+                            WHERE idbackers NOT IN
+                            (SELECT %s.idbackers FROM %s)""" \
+                            % (self.syncher.backer_html.table_name, \
+                            self.syncher.backer_graph.table_name, \
+                            self.syncher.backer_graph.table_name)
+                            
+            print sql_str
+            data =  self.syncher.backer_html.query(sql_str)
+            print 'number of items to update: %d' % len(data)
+            COLUMN = 0
+            self.status['backer_links'] = [elem[COLUMN] for elem in data]
+            
         backer_links = self.status['backer_links']
         if backer_links:        
             self.syncher.add_backers_from_html_to_graph(backer_links)  
                 
         self._save_to_pickle() 
     
-    def _update_project_byname_db(self):
-        self.status['current_step'] = '_update_project_byname_db'
-        self.status['current_vars'] = None
-        
-        project_links = self.status['project_links']
-        if project_links:        
-            self.syncher.add_projects_from_graph_to_byname(project_links)
-                
-        self._save_to_pickle() 
-        
-    def _update_backer_byname_db(self):
-        self.status['current_step'] = '_update_backer_byname_db'
-        self.status['current_vars'] = None
-        
-        backer_links = self.status['backer_links']
-        if backer_links:        
-            self.syncher.add_backers_from_graph_to_byname(backer_links)  
-                
-        self._save_to_pickle() 
-    
-    def _parse_projects(self):
+    def _parse_projects(self,bMaintain=False):
         self.status['current_step'] = '_parse_projects'
         self.status['current_vars'] = None    
+        
+        if bMaintain:
+            sql_str = """SELECT url FROM %s
+                            WHERE name IS NULL
+                            AND tried_parsing != 1
+                            """ \
+                            % (self.syncher.project_graph.table_name)
+                            
+            print sql_str
+            data =  self.syncher.project_html.query(sql_str)
+            print 'number of items to update: %d' % len(data)
+            COLUMN = 0
+            self.status['project_links'] = [elem[COLUMN] for elem in data]
         
         project_links = self.status['project_links']
         if project_links:        
@@ -161,17 +205,88 @@ class AutoScraper():
         
         self._save_to_pickle()  
     
-    def _parse_backers(self):
+    def _parse_backers(self,bMaintain=False):
         self.status['current_step'] = '_parse_backers'
         self.status['current_vars'] = None    
+        
+        if bMaintain:            
+            sql_str = """SELECT profile_link FROM %s
+                            WHERE name = ''
+                            AND idbackers IN
+                            (SELECT %s.idbackers FROM %s
+                             WHERE %s.profile_html IS NOT NULL)""" \
+                            % (self.syncher.backer_graph.table_name, \
+                            self.syncher.backer_html.table_name, \
+                            self.syncher.backer_html.table_name, \
+                            self.syncher.backer_html.table_name)
+                            
+            print sql_str
+            data =  self.syncher.backer_html.query(sql_str)
+            print 'number of items to update: %d' % len(data)
+            COLUMN = 0
+            self.status['backer_links'] = [elem[COLUMN] for elem in data]
         
         backer_links = self.status['backer_links']
         if backer_links:
             self.backer_parser.parse_html_from_links(backer_links)
             self.backer_parser.convert_links_to_ids(backer_links)
         
-        self._save_to_pickle()         
+        self._save_to_pickle()  
+    
+    
+    def _update_project_byname_db(self,bMaintain=False):
+        self.status['current_step'] = '_update_project_byname_db'
+        self.status['current_vars'] = None
+        
+        if bMaintain:
+            sql_str = """SELECT url FROM %s
+                            WHERE name != '' 
+                            AND idprojects NOT IN
+                            (SELECT  %s.idprojects FROM %s)""" \
+                            % (self.syncher.project_graph.table_name, \
+                            self.syncher.project_byname.table_name, \
+                            self.syncher.project_byname.table_name)
+                            
+            print sql_str
+            data =  self.syncher.project_graph.query(sql_str)
+            print 'number of items to update: %d' % len(data)
+            COLUMN = 0
+            self.status['project_links'] = [elem[COLUMN] for elem in data]
+            
+        
+        
+        project_links = self.status['project_links']
+        if project_links:        
+            self.syncher.add_projects_from_graph_to_byname(project_links)
+                
+        self._save_to_pickle() 
+        
+    def _update_backer_byname_db(self, bMaintain=False):
+        self.status['current_step'] = '_update_backer_byname_db'
+        self.status['current_vars'] = None
+        
+        if bMaintain:
+            sql_str = """SELECT profile_link FROM %s
+                            WHERE name != '' 
+                            AND num_projects >= %d
+                            AND idbackers NOT IN
+                            (SELECT  %s.idbackers FROM %s)""" \
+                            % (self.syncher.backer_graph.table_name, \
+                            kfs.backer_backed_thresh, \
+                            self.syncher.backer_byname.table_name, \
+                            self.syncher.backer_byname.table_name)
+                            
+            print sql_str
+            data =  self.syncher.backer_graph.query(sql_str)
+            print 'number of items to update: %d' % len(data)
+            COLUMN = 0
+            self.status['backer_links'] = [elem[COLUMN] for elem in data]
 
+        backer_links = self.status['backer_links']
+        if backer_links:        
+            self.syncher.add_backers_from_graph_to_byname(backer_links)  
+                
+        self._save_to_pickle() 
 
     def _error_handler(self):
         self._save_to_pickle()
@@ -201,3 +316,4 @@ class DBMaintainer():
 if __name__ == '__main__':
     asc = AutoScraper()
     asc.autoscrape()
+#    out = asc.table_maintainance()
