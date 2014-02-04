@@ -8,6 +8,7 @@ Created on Mon Jan 27 10:26:05 2014
 from __future__ import division
 import kickfinder_settings as kfs
 from pandas import DataFrame
+import cPickle
 
 import numpy as np
 import pylab as pl
@@ -27,6 +28,8 @@ class Predictor:
         self.sql = kfs.project_graph_tbl
 
         self.outcome_field = "percent_raised"
+        
+        self.pickle_filename = "model.p"
 
         self.used_fields = ['goal',
                     'first_backed',
@@ -35,6 +38,9 @@ class Predictor:
                     'has_video',
                     'nrewards',
                     'body_length',
+                    'nbackers',
+                    'nupdates',
+                    'ncomments',
                     'nexternal_links',
                     'project_duration',
                     'currency',
@@ -81,9 +87,7 @@ class Predictor:
                     has_website,
                     website_length, 
                                         """
-        
-
-    def predict(self,bupdate_db=0):
+    def train_model(self):    
         results = self.sql.query_dict('SELECT %s FROM %s WHERE ncomments IS NOT NULL'  % (self.feature_fields + self.outcome_field,self.sql.table_name))
 
         df = DataFrame.from_records(results)
@@ -122,6 +126,49 @@ class Predictor:
         area = auc(recall, precision)
         print("Area Under Curve: %0.2f" % area)
 
+        self._save_to_pickle(logreg)
+
+    def predict(self,bupdate_db=0):
+        results = self.sql.query_dict('SELECT %s FROM %s WHERE ncomments IS NOT NULL'  % (self.feature_fields + self.outcome_field,self.sql.table_name))
+
+        df = DataFrame.from_records(results)
+        
+        df = df.fillna(0)
+
+        df.goal = pow(df.goal,1/4)
+        df.body_length = pow(df.body_length,1/2)
+        df.nrewards = pow(df.nrewards,1/2)
+        df.nlinks = pow(df.nexternal_links,1/2)
+
+        df = df.fillna(0)
+
+        X = df.as_matrix(self.used_fields)
+                                   
+        for row_ind in range(X.shape[1]):
+            X[:,row_ind] = X[:,row_ind] - X[:,row_ind].mean()
+            X[:,row_ind] = X[:,row_ind] / X[:,row_ind].std()
+
+        y = df.percent_raised
+        y[y > 1] = 1
+        y[y < 1] = 0
+#       
+#        X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=0.3, random_state=1)
+#    
+#        logreg = linear_model.LogisticRegression(C=1e5, penalty='l2')
+#        print 'regressing...'
+#        logreg.fit(X_train, y_train)
+#        
+#        probs = logreg.predict_proba(X_test)[:,1]
+#
+#        ap = average_precision_score(y_test,probs)
+#        print ap
+#        
+#        precision, recall, thresholds = precision_recall_curve(y_test,probs)
+#        area = auc(recall, precision)
+#        print("Area Under Curve: %0.2f" % area)
+         
+        logreg = self._load_from_pickle() 
+
         names = df['url']
         
         pred = np.empty(names.shape)
@@ -138,11 +185,22 @@ class Predictor:
                 self.sql.update_value('prediction',pred_prob[ind],'url',name)
                  
         return (pred,pred_prob,actual)
-
+        
+    def _save_to_pickle(self,model):
+        fid = open(self.pickle_filename, 'wb+')
+        cPickle.dump(model,fid)
+        fid.close()
+        
+    def _load_from_pickle(self):
+        fid = open(self.pickle_filename, 'rb')
+        model = cPickle.load(fid)
+        fid.close()  
+        return model
         
 if __name__ == '__main__': 
     pred = Predictor()
-    p,pb,act = pred.predict(1)
+    pred.train_model()
+    p,pb,act = pred.predict(0)
 #    df,X, y= pred.predict(0)    
     
     thresh = 0.25

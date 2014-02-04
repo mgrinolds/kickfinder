@@ -202,6 +202,8 @@
                                 <img src="{{ result['image_url'] }}" height="100">
                                 
                                 <p class="description">{{ result['description'] }}</p> 
+                                
+                                {% if result['type'] == "project" %}
                                 <h5 class="prediction_disp">
                                     {{  result['nbackers']  }} current backers
                                 </h5>
@@ -219,6 +221,7 @@
                                     style>
                                     project's homepage <br>
                                 </a>
+                                {% endif %}
 
                             </div>
                         </div>
@@ -247,7 +250,9 @@
                                         background-position:center;                                                                             
                                         width: 300px; 
                                         opacity: 1;
-                                        border: 2px solid black;">
+                                        border: 2px solid black;
+                                        margin-bottom: 10px;
+                                        margin-left: 10px;">
                             
                             <h4 class="name textonimage project_title">
                                 {{  result['name']  }}
