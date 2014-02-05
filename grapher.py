@@ -25,7 +25,7 @@ class NetworkGraph:
         self._load_graph()
         
         
-    def find_project_from_project(self,project_id,nentries):
+    def find_project_from_project(self,project_id,nentries,only_active_flag=False):
         if not self.G.has_node(project_id):
             return None        
         
@@ -37,35 +37,41 @@ class NetworkGraph:
         nn_count.pop(project_id)
         nn_top_occur = nn_count.most_common(nentries)  
         
-        return nn_top_occur        
+        if not only_active_flag:
+            return nn_top_occur        
+              
+        common_tuple = nn_count.most_common(len(nn_count))
         
-#        common_tuple = nn_count.most_common(len(nn_count))
-#        
-#        counts = np.array([count for link, count in common_tuple],dtype='float')
-#        graph_links = [link for link, count in common_tuple]
-#
-#        if not graph_links:
-#            return None
-#        
-#        db_info = self.project_sql.extract_all_manycols('idprojects, nbackers',\
-#            'idprojects',graph_links,added_clause="AND nbackers > 0") 
-#
-#        db_links, sizes = zip(*db_info)
-#            
-##        for ind,graph_link in enumerate(graph_links):
-##            if graph_link in db_links:
-##                counts[ind] = counts[ind] / pow(sizes[db_links.index(graph_link)],1.0)
-##            else:
-##                counts[ind] = 0
-#    
-#        top_inds = np.argsort(counts)[::-1][:nentries]
-#
-#        top_projects = [graph_links[ind] for ind in top_inds]
-#        top_counts = [counts[ind] for ind in top_inds]    
-#        
-#        return zip(top_projects, top_counts) 
+        counts = np.array([count for link, count in common_tuple],dtype='float')
+        graph_links = [link for link, count in common_tuple]
+
+        if not graph_links:
+            return None
         
-    def find_profile_from_profile(self,profile_id,nentries):
+        if only_active_flag:
+            added_clause = "AND nbackers > 0 AND hours_remaining > 0"
+        else:
+            added_clause = "AND nbackers > 0"            
+        
+        db_info = self.project_sql.extract_all_manycols('idprojects, nbackers',\
+            'idprojects',graph_links,added_clause=added_clause) 
+
+        db_links, sizes = zip(*db_info)
+            
+        for ind,graph_link in enumerate(graph_links):
+            if graph_link in db_links:
+                counts[ind] = counts[ind] / pow(sizes[db_links.index(graph_link)],0.5)
+            else:
+                counts[ind] = 0
+    
+        top_inds = np.argsort(counts)[::-1][:nentries]
+
+        top_projects = [graph_links[ind] for ind in top_inds]
+        top_counts = [counts[ind] for ind in top_inds]    
+        
+        return zip(top_projects, top_counts) 
+        
+    def find_profile_from_profile(self,profile_id,nentries,only_active_flag=False):
         if not self.G.has_node(profile_id):
             return None
         
@@ -79,7 +85,7 @@ class NetworkGraph:
 
         return nn_top_occur
 
-    def find_project_from_profile(self,profile_id,nentries,test_ids=None):    
+    def find_project_from_profile(self,profile_id,nentries,test_ids=None,only_active_flag=False):    
         if not self.G.has_node(profile_id):
             return None
         
@@ -116,8 +122,13 @@ class NetworkGraph:
         if not graph_links:
             return None
 
+        if only_active_flag:
+            added_clause = "AND nbackers > 0 AND hours_remaining > 0"
+        else:
+            added_clause = "AND nbackers > 0"   
+
         db_info = self.project_sql.extract_all_manycols('idprojects, nbackers',\
-            'idprojects',graph_links,added_clause="AND nbackers > 0") 
+            'idprojects',graph_links,added_clause=added_clause) 
 
         db_links, sizes = zip(*db_info)
             

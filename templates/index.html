@@ -162,8 +162,16 @@
                   <div id="horizontalContainer" style="float: none" width="300 px">
                         <button type="submit" class="btn btn-large btn-success" 
                             id="submit">SUBMIT</button>
-                        <input type="checkbox" name="only_active" >only active projects</input>
-                        <input type="hidden" name="only_active" value="off"></input>
+                        
+                        {% if only_active == 'off' %}
+                            <input type="checkbox" name="only_active" >only active projects</input>
+                            <input type="hidden" name="only_active" value="off"></input>
+
+                        {% else %}
+                            <input type="checkbox" name="only_active" value="on" checked>only active projects</input>
+                            <input type="hidden" name="only_active" value="off"></input>
+
+                        {% endif %} 
                   </div>  
                   
                   </form>
@@ -212,15 +220,11 @@
                                     {{  result['prediction']  }}% chance of success
                                 </h5>
     
-                                <a href="{{ result['url'] }}" target=_blank class="project_url2">
+                                <a href="{{ result['url'] }}" target=_blank class="project_url1">
                                     kickstarter campaign <br>
                                 </a>
                                 
-    
-                                <a href="{{ result['url'] }}" target=_blank class="project_url1"
-                                    style>
-                                    project's homepage <br>
-                                </a>
+
                                 {% endif %}
 
                             </div>
@@ -267,23 +271,19 @@
                                 <img src="{{ result['image_url'] }}" height="100">
                                 
                                 <p class="description">{{ result['description'] }}</p> 
-                                <h5 class="prediction_disp">
+                                <h5 class="prediction_disp" style="font-size: 22px">
                                     {{  result['nbackers']  }} current backers
                                 </h5>
     
-                                <h5 class="prediction_disp">
+                                <h5 class="prediction_disp" style="font-size: 22px">
                                     {{  result['prediction']  }}% chance of success
                                 </h5>
     
-                                <a href="{{ result['url'] }}" target=_blank class="project_url2">
+                                <a href="{{ result['url'] }}" target=_blank class="project_url1"
+                                    style="font-size: 22px">
                                     kickstarter campaign <br>
                                 </a>
-                                
-    
-                                <a href="{{ result['url'] }}" target=_blank class="project_url1"
-                                    style>
-                                    project's homepage <br>
-                                </a>
+                            
 
                             </div>
                                 

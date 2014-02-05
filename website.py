@@ -35,15 +35,19 @@ def search():
     if request.form.has_key('only_active'):
         only_active_flag = request.form['only_active']
     else:
-        only_active_flag = 'on'
+        only_active_flag = 'off'
    
     if not input_string:
         return render_template('index.html')
     
     if only_active_flag == 'on':
         only_active_flag = True
+        return_flag = 'on'
     else:
         only_active_flag = False
+        return_flag = 'off'
+        
+#    return str(only_active_flag)
         
     input_id,input_type = input_handler.process_input(input_string)
 
@@ -51,9 +55,9 @@ def search():
         return "Oops! We could not find this entry (or a similar match) in the database."
     
     if input_type == 'project':
-        rec_ids_and_counts = network_graph.find_project_from_project(input_id,kfs.num_web_display)
+        rec_ids_and_counts = network_graph.find_project_from_project(input_id,kfs.num_web_display,only_active_flag)
     elif input_type == 'backer':
-        rec_ids_and_counts = network_graph.find_project_from_profile(input_id,kfs.num_web_display)     
+        rec_ids_and_counts = network_graph.find_project_from_profile(input_id,kfs.num_web_display,only_active_flag)     
     else:
         return "Unknown input type"
         
@@ -74,7 +78,8 @@ def search():
     
     output_jinja_dict = sorted(output_jinja_dict, key=itemgetter('count'), reverse=True) 
     
-    return render_template('index.html', self_info=input_jinja_dict, results=output_jinja_dict,input_string=input_string)
+    return render_template('index.html', self_info=input_jinja_dict, \
+        results=output_jinja_dict,input_string=input_string,only_active=return_flag)
   
 @app.route('/_size_slider')
 def mod_norm():
