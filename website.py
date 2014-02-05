@@ -55,9 +55,11 @@ def search():
         return "Oops! We could not find this entry (or a similar match) in the database."
     
     if input_type == 'project':
-        rec_ids_and_counts = network_graph.find_project_from_project(input_id,kfs.num_web_display,only_active_flag)
+        rec_ids_and_counts = network_graph.find_project_from_project(input_id,kfs.num_web_display,\
+            only_active_flag=only_active_flag)
     elif input_type == 'backer':
-        rec_ids_and_counts = network_graph.find_project_from_profile(input_id,kfs.num_web_display,only_active_flag)     
+        rec_ids_and_counts = network_graph.find_project_from_profile(input_id,kfs.num_web_display,\
+            only_active_flag=only_active_flag)     
     else:
         return "Unknown input type"
         
