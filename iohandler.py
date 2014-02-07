@@ -94,7 +94,17 @@ class OutputHandler():
             results[ind]['type'] = 'project'
 
             if results[ind]['prediction']:
-                results[ind]['prediction'] = '%.0f' % (results[ind]['prediction']*100)
+                results[ind]['prediction_number'] ='%.0f' % (results[ind]['prediction']*100)                
+                
+                if results[ind]['prediction'] > 0.9:
+                    results[ind]['prediction'] = '>90'
+                elif results[ind]['prediction'] < 0.1:
+                    results[ind]['prediction'] = '<10'
+                else:
+                    results[ind]['prediction'] = '%.0f' % (results[ind]['prediction']*100)
+                
+                
+#                results[ind]['prediction'] = '%.0f' % (results[ind]['prediction']*100)
 
         if not results: return None               
         return results

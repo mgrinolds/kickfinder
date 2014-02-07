@@ -38,16 +38,12 @@ class Predictor:
                     'has_video',
                     'nrewards',
                     'body_length',
-                    'nbackers',
-                    'nupdates',
-                    'ncomments',
                     'nexternal_links',
                     'project_duration',
-                    'currency',
+#                    'currency',
                     'nquestions',
                     'has_website',
                     'website_length',
-
                     'r0_10','r10_25','r25_40',
                     'r40_60','r60_100','r100_200',
                     'r200_500','r500']
@@ -117,6 +113,17 @@ class Predictor:
         print 'regressing...'
         logreg.fit(X_train, y_train)
         
+        y_pred = logreg.predict(X_test)        
+        
+        cm = confusion_matrix(y_test,y_pred)
+        print ('confusion_matrix',cm)
+        
+        f1 = f1_score(y_test,y_pred)
+        print ('f1_score',f1)
+        
+        score = logreg.score(X_test,y_test)
+        print ('score',score)
+        
         probs = logreg.predict_proba(X_test)[:,1]
 
         ap = average_precision_score(y_test,probs)
@@ -169,6 +176,7 @@ class Predictor:
          
         logreg = self._load_from_pickle() 
 
+
         names = df['url']
         
         pred = np.empty(names.shape)
@@ -201,7 +209,7 @@ if __name__ == '__main__':
     pred = Predictor()
     pred.train_model()
     p,pb,act = pred.predict(0)
-#    df,X, y= pred.predict(0)    
+    df,X, y= pred.predict(0)    
     
     thresh = 0.25
     high_end_accuracy = sum((pb > 1 - thresh) & (act == 1))/sum((pb > 1- thresh))
