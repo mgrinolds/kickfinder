@@ -14,14 +14,12 @@
 
     <!-- Custom styles for this template -->
     <link href="static/assets/css/main.css" rel="stylesheet">
-
     <link href="static/custom.css" rel="stylesheet">
 
     <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Raleway:400,300,700' rel='stylesheet' type='text/css'>
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-
     <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
 
     <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
@@ -31,16 +29,13 @@
     <script src="static/typeahead.min.js"></script>
 
     <script src="static/jquery.isotope.js" type="text/javascript"></script> 
-    
 
-     <script src="/static/bootstrap-slider.js"></script>
+    <script src="/static/bootstrap-slider.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/slider.css">
 
     <script type=text/javascript>
       $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
     </script>
-
-
 
   </head>
 
@@ -51,7 +46,7 @@
         background="static\background.jpg" style="background-repeat:no-repeat; background-size:cover"
 
         {% endif %}
-                >
+                
 
     <!-- Fixed navbar -->
         <div id="navigation" class="navbar navbar-default navbar-fixed-top">
@@ -108,20 +103,9 @@
                                             id="submit" style="height:40px">SUBMIT</button>
                                     
                                   </div>
-        
-                          
                           </form>
                         </div>
                     </div>
-
-                     
-
-    
-
-
-  
-
-
                 <div class="col-lg-2"></div>
             </div>
         </div> <!--/ .container -->
@@ -144,12 +128,6 @@
 
                 <div class="col-lg-5">
 
-
-
-  </section> <!-- #options -->
-  
-
-
                     <h5>project name or a backer's name:</h5>
                     <form role="form" action="." method="POST">
                   <div class="form-group">
@@ -170,8 +148,8 @@
                         {% else %}
                             <input type="checkbox" name="only_active" value="on" checked>only active projects</input>
                             <input type="hidden" name="only_active" value="off"></input>
-
                         {% endif %} 
+
                   </div>  
                   
                   </form>
@@ -241,8 +219,6 @@
 
                 <div class="col-lg-5">
 
-
-
                     {% if results %}
                     <div id="mycontainer" class="projectcontainer">
                     {% for result in results%}
@@ -279,11 +255,23 @@
                                 <h5 class="prediction_disp" style="font-size:22px">
                                     {{  result['prediction']  }}% chance of success
                                 </h5>
+
+                                    <form class="project_url1" role="form" action="." method="POST">
+                                        <div>
+                                    
+                                            <input type="text" name="input-name" id="projects" class="form-control" 
+                                            value="{{  result['name']  }}" style="display:none">
+                                        </div>
+                                        <button type="submit" class="btn btn-large btn-success" 
+                                            id="submit" width="150 px">find more</button> 
+                                    </form>
     
-                                <a href="{{ result['url'] }}" target=_blank class="project_url1"
-                                    style="font-size: 22px">
-                                    kickstarter campaign <br>
-                                </a>
+                                    <form class="project_url2" action="{{ result['url'] }}" target=_blank>
+                                        <button type="submit" class="btn btn-large btn-success"
+                                        id="submit" style="background-image:static\kickstarter.jpg">
+                                           kickstart it
+                                        </button>
+                                    </form>
                             
 
                             </div>
@@ -294,10 +282,6 @@
                             <p class="prediction" style="display:none">{{  result['prediction_number']  }}</p>
                             
                         </div>  
-
-                        <br>
-
-
 
                     {% endfor %}
                     </div>
@@ -391,7 +375,6 @@
                 = nconnections/Math.pow(nbackers,slider_exp)*prob_adj
 
           sortfunction()
-
         }
     }
 </script>
